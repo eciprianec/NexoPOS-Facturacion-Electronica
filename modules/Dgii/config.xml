@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module>
+    <name>Facturación Electrónica y Reportes DGII</name>
+    <namespace>Dgii</namespace>
+    <version>1.0.0</version>
+    <author>Antigravity</author>
+    <description>
+        <locale lang="es">Módulo integral para República Dominicana: Facturación Electrónica e-CF, Secuencias NCF, Validación RNC en tiempo real (POS) y Generación de Reportes Fiscales 606, 607 y 608.</locale>
+        <locale lang="en">Comprehensive Dominican Republic DGII module: Electronic Invoicing e-CF, NCF sequences, Real-time RNC validation, and Tax Reports 606, 607, 608.</locale>
+    </description>
+</module>

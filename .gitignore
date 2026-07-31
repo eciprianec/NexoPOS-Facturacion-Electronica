@@ -12,6 +12,7 @@ worker.log
 *.ignore.*
 *.log.*
 modules/*
+!modules/Dgii
 !modules/.temp
 modules/.temp/*
 !modules/index.html

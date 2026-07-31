@@ -9,11 +9,6 @@ NexoPOS is more than a standalone Point of Sale application. It is part of a gro
 
 The ecosystem includes the free NexoPOS core, official modules, mobile companion applications, desktop utilities, developer tools, documentation, and services available through [My NexoPOS](https://my.nexopos.com/en?utm_source=github.com&utm_campaign=readme).
 
-<p align="center">
-  <a href="https://my.nexopos.com/en/marketplace/item/nexo-saas-build-and-manage-a-nexopos-hosting-business?utm_source=github.com&utm_campaign=readme"><img src="https://my.nexopos.com/storage/2026/07/chatgpt-image-jul-28-2026-11-09-29-am.png" alt="nexosaas"/>
-  </a>
-</p>
-
 ### Core Application
 
 This repository contains the base version of NexoPOS. It provides the main POS foundation, including:
@@ -40,8 +35,8 @@ Try a demo right now in our [Demo Instance](https://demo.nexopos.com).
 ### Deployment
 NexoPOS is partnering with InstaPods to offer you a smooth deployment experience with NexoPOS.
 
-[![Deploy On Nexo Cloud](https://my.nexopos.com/deploy-on-nexo-cloud-button-light.svg)](https://nexopos.cloud?utm_channel=github.com&utm_campaign=readme)
 [![Deploy On InstaPods](https://instapods.com/deploy-button.svg)](https://app.instapods.com/dashboard/pods/create?app=nexopos&ref=nexopos) 
+[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/blair2004/NexoPOS/tree/v5.0.x&refcode=ebdb80cb0ec7)
 
 ### Recommended Modules
 

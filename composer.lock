@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8e74fff6821a6b56644b4a36f23930ea",
+    "content-hash": "31121f4e7e6e0ed47a0fefd22059191e",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -5244,6 +5244,63 @@
             "time": "2026-01-08T08:57:40+00:00"
         },
         {
+            "name": "platinum-place/laravel-dgii",
+            "version": "v1.3.10",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/platinum-place/laravel-dgii.git",
+                "reference": "2637da4ff48e8fbe8ea1639d4ca62c65ff6da38d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/platinum-place/laravel-dgii/zipball/2637da4ff48e8fbe8ea1639d4ca62c65ff6da38d",
+                "reference": "2637da4ff48e8fbe8ea1639d4ca62c65ff6da38d",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/http": "^11.0|^12.0",
+                "illuminate/support": "^11.0|^12.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.21",
+                "orchestra/testbench": "^9.0|^10.0",
+                "phpstan/phpstan": "^2.1",
+                "phpunit/phpunit": "^11.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "PlatinumPlace\\LaravelDgii\\Providers\\AppServiceProvider",
+                        "PlatinumPlace\\LaravelDgii\\Providers\\HttpMacroServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "PlatinumPlace\\LaravelDgii\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Integration package for DGII (Electronic Invoicing e-CF) Dominican Republic. Automated signature, authentication, and submission for standard, consumption, and range cancellation documents.",
+            "keywords": [
+                "dgii",
+                "dominican-republic",
+                "e-CF",
+                "facturacion-electronica",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/platinum-place/laravel-dgii/issues",
+                "source": "https://github.com/platinum-place/laravel-dgii/tree/v1.3.10"
+            },
+            "time": "2026-06-01T14:13:00+00:00"
+        },
+        {
             "name": "predis/predis",
             "version": "v3.5.1",
             "source": {
@@ -7758,6 +7815,64 @@
                 }
             ],
             "time": "2024-10-09T05:16:32+00:00"
+        },
+        {
+            "name": "seisigmasrl/dgii-rnc-validator",
+            "version": "v2.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/seisigmasrl/dgii-rnc-validator.git",
+                "reference": "3d45dd7afaf18bdbd306107bf454e7b42b31b243"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/seisigmasrl/dgii-rnc-validator/zipball/3d45dd7afaf18bdbd306107bf454e7b42b31b243",
+                "reference": "3d45dd7afaf18bdbd306107bf454e7b42b31b243",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.4.1",
+                "pestphp/pest": "^1.22.4",
+                "spatie/ray": "^1.36"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Seisigma\\DgiiRncValidator\\": "src",
+                    "Seisigma\\DgiiRncValidator\\helpers\\": "src\\helpers"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ricardo A. Vargas R.",
+                    "email": "im@ricardovargas.me",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A simple package to check a given RNC with the official Tax Authority, Dirección General de Impuestos Internos (DGII), in the Dominican Republic.",
+            "homepage": "https://github.com/seisigmasrl/dgii-rnc-validator",
+            "keywords": [
+                "dgii-rnc-validator",
+                "seisigmasrl"
+            ],
+            "support": {
+                "issues": "https://github.com/seisigmasrl/dgii-rnc-validator/issues",
+                "source": "https://github.com/seisigmasrl/dgii-rnc-validator/tree/v2.0.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/ricardov03",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-02-01T21:35:35+00:00"
         },
         {
             "name": "simplesoftwareio/simple-qrcode",
@@ -12350,10 +12465,10 @@
         "php": "^8.2.0",
         "ext-curl": "*",
         "ext-gd": "*",
-        "ext-mbstring": "*",
         "ext-intl": "*",
+        "ext-mbstring": "*",
         "ext-zip": "*"
     },
-    "platform-dev": [],
-    "plugin-api-version": "2.2.0"
+    "platform-dev": {},
+    "plugin-api-version": "2.9.0"
 }

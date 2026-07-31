@@ -480,7 +480,7 @@ export default {
          */
         getFullLocale( locale ) {
             // Map language codes from config/nexopos.php to full locale strings
-            // Supported: en, de, fr, es, it, id, ar, pt, tr, km, vi, sq, ko
+            // Supported: en, de, fr, es, it, id, ar, pt, tr, km, vi, sq
             const localeMap = {
                 'en': 'en-US',    // English
                 'de': 'de-DE',    // Deutsch
@@ -493,8 +493,7 @@ export default {
                 'tr': 'tr-TR',    // Türkçe
                 'km': 'km-KH',    // ភាសាខ្មែរ (Khmer)
                 'vi': 'vi-VN',    // Vietnamese
-                'sq': 'sq-AL',    // Shqiptare (Albanian)
-                'ko': 'ko-KR'     // 한국어 (Korean)
+                'sq': 'sq-AL'     // Shqiptare (Albanian)
             };
             
             return localeMap[ locale ] || `${locale}-${locale.toUpperCase()}`;

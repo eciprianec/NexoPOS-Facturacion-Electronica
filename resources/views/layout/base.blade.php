@@ -27,7 +27,6 @@ if ( Auth::check() && Auth::user()->attribute instanceof UserAttribute ) {
     ])
     @yield( 'layout.base.header' )
     @include( 'layout._header-script' )
-    @vite([ 'resources/ts/vue-runtime.ts' ])
     @vite([ 'resources/ts/lang-loader.ts' ])
 </head>
 <body>
