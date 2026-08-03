@@ -169,4 +169,4 @@ $pos_vat          =   $order->settings?->where( 'key', 'ns_pos_vat' )->first()?-
         </div>
     </div>
 </div>
-@includeWhen( request()->query( 'autoprint' ) === 'true', '/pages/dashboard/orders/templates/_autoprint' )
+@includeWhen( request()->query( 'autoprint' ) === 'true', '/pages/dashboard/orders/templates/_autoprint' )<style> @media print { body, html, * { color: #000 !important; font-weight: 800 !important; font-family: 'Arial', sans-serif !important; } .text-sm { font-size: 14px !important; } .text-xs { font-size: 12px !important; } .text-gray-500, .text-gray-600, .text-gray-700 { color: #000 !important; } border, .border-b, .border-dashed { border-color: #000 !important; } } </style>

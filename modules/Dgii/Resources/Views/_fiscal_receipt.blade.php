@@ -83,7 +83,7 @@ if ($esFiscal && $ncfNumber) {
 ?>
 
 <div id="dgii-fiscal-receipt" class="dgii-receipt-wrapper">
-<style>
+<style> @media print { body, html, * { color: #000 !important; font-weight: 800 !important; font-family: 'Arial', sans-serif !important; } .text-sm { font-size: 14px !important; } .text-xs { font-size: 12px !important; } .text-gray-500, .text-gray-600, .text-gray-700 { color: #000 !important; } border, .border-b, .border-dashed { border-color: #000 !important; } } 
     /* Estilos para impresión térmica 80mm */
     @page {
         margin: 0;
