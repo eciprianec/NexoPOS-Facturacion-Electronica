@@ -1,15 +1,10 @@
 <?php
 /**
- * Recibo Fiscal Térmico 80mm — Módulo DGII para NexoPOS
+ * Recibo Térmico 80mm Universal — Módulo DGII para NexoPOS
  * =====================================================
- * Reemplaza el recibo estándar de NexoPOS con uno que cumple
- * con las regulaciones de la DGII de República Dominicana.
- *
- * Reglas de negocio:
- *  - Cliente genérico (sin RNC) → e-CF 32 / B02 = CONSUMIDOR FINAL obligatorio
- *  - Cliente con RNC válido → e-CF 31 / B01 = CRÉDITO FISCAL
- *  - Notas de Crédito → e-CF 34
- *  - Notas de Débito → e-CF 33
+ * Renderiza de forma dinámica y elegante según el tipo de venta:
+ *  - Si es Fiscal: Factura de Consumo/Crédito Fiscal con NCF, QR, Estampa Digital.
+ *  - Si no es Fiscal (estándar/genérica): Ticket normal limpio, ordenado y sin datos de la DGII.
  *
  * Variables disponibles: $order, $ordersService, $paymentTypes
  */
@@ -23,105 +18,73 @@ use Illuminate\Support\Facades\View;
 $dgiiInv = DB::table('nexopos_dgii_invoices')->where('order_id', $order->id)->first();
 $dgiiSettings = DB::table('nexopos_dgii_settings')->first();
 
+$esFiscal = !empty($dgiiInv);
+
 // Datos del emisor
-$rncEmisor     = $dgiiSettings->rnc_emisor ?? ns()->option->get('ns_store_rnc', '000000000');
-$razonSocial   = $dgiiSettings->razon_social ?? ns()->option->get('ns_store_name', 'MI EMPRESA');
+$rncEmisor       = $dgiiSettings->rnc_emisor ?? ns()->option->get('ns_store_rnc', '');
+$razonSocial     = $dgiiSettings->razon_social ?? ns()->option->get('ns_store_name', 'Food Shop Hierro Express');
 $nombreComercial = $dgiiSettings->nombre_comercial ?? '';
-$direccion     = ns()->option->get('ns_store_address', '');
-$telefono      = ns()->option->get('ns_store_phone', '');
+$direccion       = ns()->option->get('ns_store_address', '');
+$telefono        = ns()->option->get('ns_store_phone', '');
 
-// Datos del comprobante
-$ncfNumber     = $dgiiInv->ncf ?? '';
-$typeCode      = $dgiiInv->ecf_type ?? 'E32';
-$rncBuyer      = $dgiiInv->rnc_buyer ?? '';
-$buyerName     = $dgiiInv->buyer_name ?? '';
-$securityCode  = $dgiiInv->security_code ?? '';
-$trackId       = $dgiiInv->track_id ?? '';
+// Datos del comprobante (Solo si es fiscal)
+$ncfNumber     = '';
+$typeCode      = 'E32';
+$rncBuyer      = '';
+$buyerName     = '';
+$securityCode  = '';
+$trackId       = '';
 
-// ───── 2. FORZAR E32 PARA CLIENTE GENÉRICO ─────
-$isGenericCustomer = empty($rncBuyer);
-if ($isGenericCustomer) {
-    $typeCode   = 'E32';
-    $buyerName  = 'CONSUMIDOR FINAL';
+if ($esFiscal) {
+    $ncfNumber     = $dgiiInv->ncf ?? '';
+    $typeCode      = $dgiiInv->ecf_type ?? 'E32';
+    $rncBuyer      = $dgiiInv->rnc_buyer ?? '';
+    $buyerName     = $dgiiInv->buyer_name ?? '';
+    $securityCode  = $dgiiInv->security_code ?? '';
+    $trackId       = $dgiiInv->track_id ?? '';
+
+    $isGenericCustomer = empty($rncBuyer);
+    if ($isGenericCustomer) {
+        $typeCode   = 'E32';
+        $buyerName  = 'CONSUMIDOR FINAL';
+    }
 }
 
-// ───── 3. MAPEO DE TIPOS DE COMPROBANTE ─────
+// ───── 2. MAPEO DE TIPOS DE COMPROBANTE ─────
 $tiposComprobante = [
-    'E31' => [
-        'titulo'   => 'FACTURA DE CRÉDITO FISCAL ELECTRÓNICA',
-        'indicador'=> 'VÁLIDO PARA CRÉDITO FISCAL',
-        'color'    => '#1a5276',
-    ],
-    'E32' => [
-        'titulo'   => 'FACTURA DE CONSUMO ELECTRÓNICA',
-        'indicador'=> 'CONSUMIDOR FINAL',
-        'color'    => '#117a65',
-    ],
-    'E33' => [
-        'titulo'   => 'NOTA DE DÉBITO ELECTRÓNICA',
-        'indicador'=> 'NOTA DE DÉBITO',
-        'color'    => '#922b21',
-    ],
-    'E34' => [
-        'titulo'   => 'NOTA DE CRÉDITO ELECTRÓNICA',
-        'indicador'=> 'NOTA DE CRÉDITO',
-        'color'    => '#7d6608',
-    ],
-    'E41' => [
-        'titulo'   => 'COMPROBANTE DE COMPRAS ELECTRÓNICO',
-        'indicador'=> 'REGISTRO DE COMPRAS',
-        'color'    => '#4a235a',
-    ],
-    'E43' => [
-        'titulo'   => 'COMPROBANTE GASTOS MENORES ELECTRÓNICO',
-        'indicador'=> 'GASTOS MENORES',
-        'color'    => '#616a6b',
-    ],
-    'E44' => [
-        'titulo'   => 'COMPROBANTE REGÍMENES ESPECIALES ELECTRÓNICO',
-        'indicador'=> 'RÉGIMEN ESPECIAL',
-        'color'    => '#1b4f72',
-    ],
-    'E45' => [
-        'titulo'   => 'COMPROBANTE GUBERNAMENTAL ELECTRÓNICO',
-        'indicador'=> 'GUBERNAMENTAL',
-        'color'    => '#0e6655',
-    ],
-    'B01' => [
-        'titulo'   => 'FACTURA DE CRÉDITO FISCAL',
-        'indicador'=> 'VÁLIDO PARA CRÉDITO FISCAL',
-        'color'    => '#1a5276',
-    ],
-    'B02' => [
-        'titulo'   => 'FACTURA DE CONSUMO',
-        'indicador'=> 'CONSUMIDOR FINAL',
-        'color'    => '#117a65',
-    ],
+    'E31' => ['titulo' => 'FACTURA DE CRÉDITO FISCAL ELECTRÓNICA', 'indicador' => 'VÁLIDO PARA CRÉDITO FISCAL'],
+    'E32' => ['titulo' => 'FACTURA DE CONSUMO ELECTRÓNICA', 'indicador' => 'CONSUMIDOR FINAL'],
+    'E33' => ['titulo' => 'NOTA DE DÉBITO ELECTRÓNICA', 'indicador' => 'NOTA DE DÉBITO'],
+    'E34' => ['titulo' => 'NOTA DE CRÉDITO ELECTRÓNICA', 'indicador' => 'NOTA DE CRÉDITO'],
+    'E41' => ['titulo' => 'COMPROBANTE DE COMPRAS ELECTRÓNICO', 'indicador' => 'REGISTRO DE COMPRAS'],
+    'E43' => ['titulo' => 'COMPROBANTE GASTOS MENORES ELECTRÓNICO', 'indicador' => 'GASTOS MENORES'],
+    'E44' => ['titulo' => 'COMPROBANTE REGÍMENES ESPECIALES ELECTRÓNICO', 'indicador' => 'RÉGIMEN ESPECIAL'],
+    'E45' => ['titulo' => 'COMPROBANTE GUBERNAMENTAL ELECTRÓNICO', 'indicador' => 'GUBERNAMENTAL'],
+    'B01' => ['titulo' => 'FACTURA DE CRÉDITO FISCAL', 'indicador' => 'VÁLIDO PARA CRÉDITO FISCAL'],
+    'B02' => ['titulo' => 'FACTURA DE CONSUMO', 'indicador' => 'CONSUMIDOR FINAL'],
 ];
 
-$tipo = $tiposComprobante[$typeCode] ?? [
-    'titulo'    => 'COMPROBANTE FISCAL',
-    'indicador' => 'VALOR FISCAL',
-    'color'     => '#333333',
-];
+$tipo = $tiposComprobante[$typeCode] ?? ['titulo' => 'COMPROBANTE FISCAL', 'indicador' => 'VALOR FISCAL'];
 
-// ───── 4. CÁLCULOS FISCALES ─────
+// ───── 3. CÁLCULOS ─────
 $prefered_price = $order->settings?->where('key', 'ns_pos_prefered_price')->first()?->value;
 $pos_vat        = $order->settings?->where('key', 'ns_pos_vat')->first()?->value;
 
 $subtotalNeto   = $order->subtotal;
 $itbis          = $order->tax_value ?? 0;
-$montoExento    = 0; // Se puede calcular por producto si aplica
 $totalFinal     = $order->total;
 
-// QR DGII
-$qrUrl = "https://ecf.dgii.gov.do/ecf/consulta?RncEmisor={$rncEmisor}&RncComprador={$rncBuyer}&eNCF={$ncfNumber}&MontoTotal={$totalFinal}&CodigoSeguridad={$securityCode}";
-$qrImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=" . urlencode($qrUrl);
+// QR DGII (Solo si es fiscal)
+$qrImageUrl = '';
+if ($esFiscal && $ncfNumber) {
+    $qrUrl = "https://ecf.dgii.gov.do/ecf/consulta?RncEmisor={$rncEmisor}&RncComprador={$rncBuyer}&eNCF={$ncfNumber}&MontoTotal={$totalFinal}&CodigoSeguridad={$securityCode}";
+    $qrImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=" . urlencode($qrUrl);
+}
 ?>
 
 <div id="dgii-fiscal-receipt" class="dgii-receipt-wrapper">
 <style>
-    /* ── Estilos para impresión térmica 80mm ── */
+    /* Estilos para impresión térmica 80mm */
     @page {
         margin: 0;
         size: 80mm auto;
@@ -335,7 +298,7 @@ $qrImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=" .
 </style>
 
     <!-- ════════════════════════════════════════════════════ -->
-    <!-- ░░  ENCABEZADO DEL EMISOR                        ░░ -->
+    <!-- ░░  ENCABEZADO DE LA EMPRESA                     ░░ -->
     <!-- ════════════════════════════════════════════════════ -->
     <div class="r-header">
         @if ( ns()->option->get( 'ns_invoice_receipt_logo' ) )
@@ -345,7 +308,11 @@ $qrImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=" .
         @if($nombreComercial && $nombreComercial !== $razonSocial)
             <div class="empresa-comercial">{{ $nombreComercial }}</div>
         @endif
-        <div class="empresa-rnc">RNC: {{ $rncEmisor }}</div>
+        
+        @if($esFiscal && $rncEmisor)
+            <div class="empresa-rnc">RNC: {{ $rncEmisor }}</div>
+        @endif
+        
         @if($direccion)
             <div class="empresa-datos">{{ $direccion }}</div>
         @endif
@@ -355,19 +322,25 @@ $qrImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=" .
     </div>
 
     <!-- ════════════════════════════════════════════════════ -->
-    <!-- ░░  TIPO DE COMPROBANTE FISCAL                   ░░ -->
+    <!-- ░░  TIPO DE COMPROBANTE (SOLO FISCAL)            ░░ -->
     <!-- ════════════════════════════════════════════════════ -->
-    <div class="r-tipo-badge">
-        <div class="r-tipo-titulo">{{ $tipo['titulo'] }}</div>
-        <span class="r-tipo-indicador">{{ $tipo['indicador'] }}</span>
-        @if($ncfNumber)
-            <div class="r-ncf-number">NCF: {{ $ncfNumber }}</div>
-        @endif
-        <div class="r-ncf-vencimiento">Venc. NCF: 31/12/{{ date('Y') }}</div>
-    </div>
+    @if($esFiscal)
+        <div class="r-tipo-badge">
+            <div class="r-tipo-titulo">{{ $tipo['titulo'] }}</div>
+            <span class="r-tipo-indicador">{{ $tipo['indicador'] }}</span>
+            @if($ncfNumber)
+                <div class="r-ncf-number">NCF: {{ $ncfNumber }}</div>
+            @endif
+            <div class="r-ncf-vencimiento">Venc. NCF: 31/12/{{ date('Y') }}</div>
+        </div>
+    @else
+        <div class="r-tipo-badge" style="border-bottom: none; padding: 2px 0;">
+            <div class="r-tipo-titulo" style="font-size: 11px; letter-spacing: 1px;">TICKET DE VENTA</div>
+        </div>
+    @endif
 
     <!-- ════════════════════════════════════════════════════ -->
-    <!-- ░░  DATOS DE LA ORDEN Y COMPRADOR                ░░ -->
+    <!-- ░░  DATOS DE LA ORDEN Y CAJERO                   ░░ -->
     <!-- ════════════════════════════════════════════════════ -->
     <div class="r-info-block">
         <div class="r-row">
@@ -386,20 +359,30 @@ $qrImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=" .
         @endif
     </div>
 
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- ░░  DATOS DEL COMPRADOR (CLIENTE)                ░░ -->
+    <!-- ════════════════════════════════════════════════════ -->
     <div class="r-info-block">
-        @if(!$isGenericCustomer)
-            <div class="r-row">
-                <span class="r-label">RNC/Cédula:</span>
-                <span class="r-value">{{ $rncBuyer }}</span>
-            </div>
-            <div class="r-row">
-                <span class="r-label">Razón Social:</span>
-                <span class="r-value">{{ $buyerName }}</span>
-            </div>
+        @if($esFiscal)
+            @if(!$isGenericCustomer)
+                <div class="r-row">
+                    <span class="r-label">RNC/Cédula:</span>
+                    <span class="r-value">{{ $rncBuyer }}</span>
+                </div>
+                <div class="r-row">
+                    <span class="r-label">Razón Social:</span>
+                    <span class="r-value">{{ $buyerName }}</span>
+                </div>
+            @else
+                <div class="r-row">
+                    <span class="r-label">Cliente:</span>
+                    <span class="r-value">CONSUMIDOR FINAL</span>
+                </div>
+            @endif
         @else
             <div class="r-row">
                 <span class="r-label">Cliente:</span>
-                <span class="r-value">CONSUMIDOR FINAL</span>
+                <span class="r-value">{{ $order->customer ? trim($order->customer->first_name . ' ' . $order->customer->last_name) : 'CLIENTE CONTADO' }}</span>
             </div>
         @endif
     </div>
@@ -462,7 +445,7 @@ $qrImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=" .
         @endif
 
         <div class="r-total-row r-gran-total">
-            <span class="r-total-label">TOTAL:</span>
+            <span class="r-total-label">Total:</span>
             <span>{{ ns()->currency->define( $order->total ) }}</span>
         </div>
     </div>
@@ -508,9 +491,9 @@ $qrImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=" .
     @endif
 
     <!-- ════════════════════════════════════════════════════ -->
-    <!-- ░░  ESTAMPA DIGITAL e-CF / CÓDIGO QR DGII        ░░ -->
+    <!-- ░░  ESTAMPA DIGITAL DGII (SOLO FISCAL)           ░░ -->
     <!-- ════════════════════════════════════════════════════ -->
-    @if($ncfNumber)
+    @if($esFiscal && $ncfNumber)
     <div class="r-fiscal-footer">
         <div class="r-ecf-label">Estampa Digital e-CF</div>
         @if($securityCode)

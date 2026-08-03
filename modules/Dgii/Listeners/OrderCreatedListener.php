@@ -29,6 +29,12 @@ class OrderCreatedListener
         // Obtener datos fiscales del request (si vienen del POS con validación RNC)
         $rncBuyer  = request()->input('dgii_rnc', '');
         $buyerName = request()->input('dgii_name', '');
+        $ncfType   = request()->input('dgii_ncf_type', '');
+
+        // Si NO se solicita explícitamente facturación fiscal (rnc vacío y ncf_type vacío), saltamos la asignación fiscal
+        if (empty($rncBuyer) && empty($ncfType)) {
+            return;
+        }
 
         // Si no vienen del request, intentar obtener del cliente de la orden
         if (empty($rncBuyer) && $order->customer) {
