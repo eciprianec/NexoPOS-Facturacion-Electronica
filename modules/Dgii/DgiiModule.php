@@ -47,7 +47,7 @@ class DgiiModule
         $menus['dgii'] = [
             'label' => 'Facturación DGII',
             'icon' => 'la-file-invoice-dollar',
-            'permissions' => ['nexopos.read.settings'],
+            'permissions' => ['manage.options'],
             'childrens' => [
                 'settings' => [
                     'label' => 'Configuración DGII',
