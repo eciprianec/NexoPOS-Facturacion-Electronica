@@ -369,6 +369,20 @@ class RegisterCrud extends CrudService
         );
 
         $entry->action(
+            identifier: 'z-report-thermal',
+            label: __( 'Ticket Cierre 80mm' ),
+            type: 'POPUP',
+            url: ns()->url( '/dashboard/' . 'cash-registers' . '/z-report-thermal/' . $entry->id . '?autoprint=true' )
+        );
+
+        $entry->action(
+            identifier: 'z-report',
+            label: __( 'Z-Report Web' ),
+            type: 'GOTO',
+            url: ns()->url( '/dashboard/' . 'cash-registers' . '/z-report/' . $entry->id )
+        );
+
+        $entry->action(
             identifier: 'delete',
             label: __( 'Delete' ),
             type: 'DELETE',

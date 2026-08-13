@@ -437,6 +437,23 @@ class RegisterHistoryCrud extends CrudService
             $entry->{ '$cssClass' } = 'warning border';
         }
 
+        if ( $entry->action === RegisterHistory::ACTION_CLOSING ) {
+            $entry->action(
+                label: __( 'Ticket Cierre 80mm' ),
+                identifier: 'print-z-report-thermal',
+                url: ns()->url( '/dashboard/cash-registers/z-report-thermal/' . $entry->register_id . '?history_id=' . $entry->id . '&autoprint=true' ),
+                type: 'GOTO_URL',
+                target: '_blank'
+            );
+            $entry->action(
+                label: __( 'Ver Reporte Z Web' ),
+                identifier: 'print-z-report-web',
+                url: ns()->url( '/dashboard/cash-registers/z-report/' . $entry->register_id . '?history_id=' . $entry->id ),
+                type: 'GOTO_URL',
+                target: '_blank'
+            );
+        }
+
         $entry->action(
             label: __( 'Details' ),
             identifier: 'view-details',

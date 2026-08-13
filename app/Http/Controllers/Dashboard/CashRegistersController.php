@@ -90,13 +90,15 @@ class CashRegistersController extends DashboardController
             return $this->registersService->closeRegister(
                 $register,
                 $request->input( 'amount' ),
-                $request->input( 'description' )
+                $request->input( 'description' ),
+                $request->input( 'denominations', [] )
             );
         } elseif ( $action === RegisterHistory::ACTION_CLOSING ) {
             return $this->registersService->closeRegister(
                 $register,
                 $request->input( 'amount' ),
-                $request->input( 'description' )
+                $request->input( 'description' ),
+                $request->input( 'denominations', [] )
             );
         } elseif ( $action === RegisterHistory::ACTION_CASHING ) {
             return $this->registersService->cashIng(
@@ -294,26 +296,19 @@ class CashRegistersController extends DashboardController
         ] );
     }
 
-    public function getRegisterZReport( Register $register )
+    public function getRegisterZReport( Request $request, Register $register )
     {
-        $data = $this->registersService->getZReport( $register );
-
-        /**
-         * @var mixed register
-         * @var mixed opening
-         * @var mixed closing
-         * @var mixed histories
-         * @var mixed orders
-         * @var mixed openingBalance
-         * @var mixed closingBalance
-         * @var mixed difference
-         * @var mixed totalGrossSales
-         * @var mixed totalDiscount
-         * @var mixed total
-         * @var mixed unitProductCategories
-         * @var mixed user
-         */
+        $historyId = $request->query( 'history_id' );
+        $data = $this->registersService->getZReport( $register, $historyId ? (int) $historyId : null );
 
         return View::make( 'pages.dashboard.orders.templates.z-report', (array) $data );
+    }
+
+    public function getRegisterZReportThermal( Request $request, Register $register )
+    {
+        $historyId = $request->query( 'history_id' );
+        $data = $this->registersService->getZReport( $register, $historyId ? (int) $historyId : null );
+
+        return View::make( 'pages.dashboard.orders.templates.z-report-thermal', (array) $data );
     }
 }

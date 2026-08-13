@@ -144,6 +144,14 @@ export default {
             } catch( exception ) {
                 throw exception;
             }
+        },
+
+        printPreCloseThermal( register ) {
+            const registerId = register.id || (this.settings && this.settings.register ? this.settings.register.id : null);
+            if ( registerId ) {
+                const baseUrl = window.location.origin;
+                window.open( `${baseUrl}/dashboard/cash-registers/z-report-thermal/${registerId}?autoprint=true`, '_blank', 'width=420,height=650' );
+            }
         }
     }
 }
@@ -187,6 +195,10 @@ export default {
             <div @click="historyPopup( register )" class="ns-numpad-key info border-r border-b py-4 cursor-pointer px-2 flex items-center justify-center flex-col">
                 <i class="las la-history text-6xl"></i>
                 <h3 class="text-xl font-bold">{{ __( 'History' ) }}</h3>
+            </div>
+            <div @click="printPreCloseThermal( register )" class="ns-numpad-key info border-r border-b py-4 cursor-pointer px-2 flex items-center justify-center flex-col col-span-2 bg-info-primary text-white">
+                <i class="las la-print text-5xl mb-1"></i>
+                <h3 class="text-lg font-bold">{{ __( 'Imprimir Pre-Cierre (80mm)' ) }}</h3>
             </div>
         </div>
     </div>

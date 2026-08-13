@@ -8,3 +8,5 @@ Route::get( '/cash-registers/create', [ CashRegistersController::class, 'createR
 Route::get( '/cash-registers/edit/{register}', [ CashRegistersController::class, 'editRegister' ] )->name( ns()->routeName( 'ns.dashboard.registers-edit' ) );
 Route::get( '/cash-registers/history/{register}', [ CashRegistersController::class, 'getRegisterHistory' ] )->name( ns()->routeName( 'ns.dashboard.registers-history' ) );
 Route::get( '/cash-registers/z-report/{register}', [ CashRegistersController::class, 'getRegisterZReport' ] )->name( ns()->routeName( 'ns.dashboard.registers-zreport' ) );
+Route::get( '/cash-registers/z-report-thermal/{register}', [ CashRegistersController::class, 'getRegisterZReportThermal' ] )->name( ns()->routeName( 'ns.dashboard.registers-zreport-thermal' ) );
+

@@ -50,7 +50,7 @@ class CashRegistersService
         ];
     }
 
-    public function closeRegister( Register $register, $amount, $description )
+    public function closeRegister( Register $register, $amount, $description, $denominations = [] )
     {
         if ( $register->status !== Register::STATUS_OPENED ) {
             throw new NotAllowedException(
@@ -61,11 +61,31 @@ class CashRegistersService
             );
         }
 
-        if ( ns()->currency->getRaw( $register->balance ) === ns()->currency->getRaw( $amount ) ) {
+        $expectedCash = (float) ns()->currency->getRaw( $register->balance );
+        $declaredCash = (float) ns()->currency->getRaw( $amount );
+
+        if ( $declaredCash < $expectedCash ) {
+            $shortage = $expectedCash - $declaredCash;
+            throw new NotAllowedException(
+                sprintf(
+                    __( 'No se permite cerrar la caja con faltante de efectivo. Faltante detectado: %s. Efectivo contado: %s, Esperado: %s.' ),
+                    ns()->currency->define( $shortage ),
+                    ns()->currency->define( $declaredCash ),
+                    ns()->currency->define( $expectedCash )
+                )
+            );
+        }
+
+        if ( $expectedCash === $declaredCash ) {
             $diffType = 'unchanged';
         } else {
-            $diffType = ns()->currency->getRaw( $register->balance ) < ns()->currency->getRaw( $amount ) ? 'positive' : 'negative';
+            $diffType = $expectedCash < $declaredCash ? 'positive' : 'negative';
         }
+
+        $descriptionPayload = [
+            'note' => is_string( $description ) ? $description : '',
+            'denominations' => is_array( $denominations ) ? $denominations : ( json_decode( $denominations, true ) ?: [] ),
+        ];
 
         $registerHistory = new RegisterHistory;
         $registerHistory->register_id = $register->id;
@@ -75,7 +95,7 @@ class CashRegistersService
         $registerHistory->value = ns()->currency->define( $amount )->toFloat();
         $registerHistory->balance_before = $register->balance;
         $registerHistory->author_id = Auth::id();
-        $registerHistory->description = $description;
+        $registerHistory->description = json_encode( $descriptionPayload );
         $registerHistory->save();
 
         $register->status = Register::STATUS_CLOSED;
@@ -451,18 +471,34 @@ class CashRegistersService
         return $formattedTime;
     }
 
-    public function getZReport( Register $register )
+    public function getZReport( Register $register, ?int $historyId = null )
     {
-        $opening = RegisterHistory::where( 'register_id', $register->id )
-            ->where( 'action', RegisterHistory::ACTION_OPENING )
-            ->orderBy( 'id', 'desc' )
-            ->first();
+        if ( $historyId !== null ) {
+            $closing = RegisterHistory::where( 'register_id', $register->id )
+                ->where( 'id', $historyId )
+                ->first();
+            
+            $opening = RegisterHistory::where( 'register_id', $register->id )
+                ->where( 'action', RegisterHistory::ACTION_OPENING )
+                ->where( 'id', '<', $closing ? $closing->id : PHP_INT_MAX )
+                ->orderBy( 'id', 'desc' )
+                ->first();
+        } else {
+            $opening = RegisterHistory::where( 'register_id', $register->id )
+                ->where( 'action', RegisterHistory::ACTION_OPENING )
+                ->orderBy( 'id', 'desc' )
+                ->first();
 
-        $closing = RegisterHistory::where( 'register_id', $register->id )
-            ->where( 'action', RegisterHistory::ACTION_CLOSING )
-            ->where( 'id', '>', $opening->id )
-            ->orderBy( 'id', 'desc' )
-            ->first();
+            $closing = RegisterHistory::where( 'register_id', $register->id )
+                ->where( 'action', RegisterHistory::ACTION_CLOSING )
+                ->where( 'id', '>', $opening ? $opening->id : 0 )
+                ->orderBy( 'id', 'desc' )
+                ->first();
+        }
+
+        if ( ! $opening instanceof RegisterHistory ) {
+            throw new NotAllowedException( __( 'No opening register history session found.' ) );
+        }
 
         $histories = RegisterHistory::where( 'register_id', $register->id )
             ->where( 'created_at', '>=', $opening->created_at )
@@ -485,7 +521,26 @@ class CashRegistersService
             ->where( 'identifier', OrderPayment::PAYMENT_CASH )
             ->sum( 'value' );
 
+        $totalCashIn = RegisterHistory::where( 'register_id', $register->id )
+            ->where( 'action', RegisterHistory::ACTION_CASHING )
+            ->where( 'created_at', '>=', $opening->created_at )
+            ->sum( 'value' );
+
+        $totalCashOut = RegisterHistory::where( 'register_id', $register->id )
+            ->where( 'action', RegisterHistory::ACTION_CASHOUT )
+            ->where( 'created_at', '>=', $opening->created_at )
+            ->sum( 'value' );
+
         $totalChange = $orders->sum( 'change' );
+
+        $rawExpectedCash = (float) $opening->value + (float) $totalCashPayment + (float) $totalCashIn - (float) $totalCashOut - (float) $totalChange;
+        $rawDeclaredCash = (float) ($closing->value ?? 0);
+        $rawCashDifference = $rawDeclaredCash - $rawExpectedCash;
+
+        $expectedCash = ns()->currency->define( $rawExpectedCash );
+        $declaredCash = ns()->currency->define( $rawDeclaredCash );
+        $cashDifference = ns()->currency->define( $rawCashDifference );
+
         $cashOnHand = ns()->currency->define( $opening->value )
             ->additionateBy( $totalCashPayment )
             ->subtractBy( $totalChange )
@@ -508,6 +563,9 @@ class CashRegistersService
         $totalGrossSales = ns()->currency->define( $rawTotalGrossSales );
         $totalShippings = ns()->currency->define( $rawTotalShippings );
         $totalTaxes = ns()->currency->define( $rawTotalTaxes );
+        $totalCashInFormatted = ns()->currency->define( $totalCashIn );
+        $totalCashOutFormatted = ns()->currency->define( $totalCashOut );
+        $totalChangeFormatted = ns()->currency->define( $totalChange );
 
         $sessionDuration = $this->diffInTime(
             $closing->created_at ?? now()->toDateTimeString(),
@@ -559,7 +617,15 @@ class CashRegistersService
         } );
 
         $user = User::find( $opening->author_id );
-        $cashier = $user->first_name . ' ' . $user->last_name . '(' . $user->username . ')';
+        $cashier = $user ? ($user->first_name . ' ' . $user->last_name . ' (' . $user->username . ')') : 'N/A';
+
+        $denominations = [];
+        if ( $closing && ! empty( $closing->description ) ) {
+            $decoded = json_decode( $closing->description, true );
+            if ( is_array( $decoded ) && isset( $decoded['denominations'] ) ) {
+                $denominations = $decoded['denominations'];
+            }
+        }
 
         return (object) compact(
             'register',
@@ -583,7 +649,19 @@ class CashRegistersService
             'payments',
             'cashOnHand',
             'products',
-            'user'
+            'user',
+            'totalCashIn',
+            'totalCashOut',
+            'totalCashInFormatted',
+            'totalCashOutFormatted',
+            'totalChangeFormatted',
+            'rawExpectedCash',
+            'rawDeclaredCash',
+            'rawCashDifference',
+            'expectedCash',
+            'declaredCash',
+            'cashDifference',
+            'denominations'
         );
     }
 }

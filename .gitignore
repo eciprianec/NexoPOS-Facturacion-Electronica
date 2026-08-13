@@ -72,12 +72,7 @@ playwright/.auth/
 # Archivos y scripts de importación omitidos
 import_vocatus.php
 vocatus_*
-run_full_scraper.py
-clean_products_dataset.py
-download_vocatus_images.py
-find_full_dataset.py
-inspect_json_ids.py
-read_scraped.py
+*.py
 test_import_sample.php
 imagenes_productos/
 ~$vocatus_*.xlsx
