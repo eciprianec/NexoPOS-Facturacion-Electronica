@@ -1,0 +1,33 @@
+name: Deploy to Production VPS
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    name: Deploy Application to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Execute Remote SSH Commands
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
+          script: |
+            echo "Starting automated deployment on VPS..."
+            cd /www/wwwroot/45.93.136.97
+            git pull origin master || git pull origin main
+            php artisan config:cache
+            php artisan route:cache
+            php artisan storage:link --quiet || true
+            chown -R www:www /www/wwwroot/45.93.136.97
+            echo "Deployment completed successfully!"
