@@ -20,4 +20,5 @@ Route::get( '/products/categories/compute-products/{category}', [ CategoryContro
 Route::get( '/products/stock-flow-records', [ CategoryController::class, 'showStockFlowCrud' ] )->name( ns()->routeName( 'ns.dashboard.products.stock-flow-records' ) );
 Route::get( '/products/scale-range', [ ProductsController::class, 'getScaleRange' ] )->name( ns()->routeName( 'ns.dashboard.products.scale-range' ) );
 Route::get( '/products/scale-range/create', [ ProductsController::class, 'createScaleRange' ] )->name( ns()->routeName( 'ns.dashboard.products.scale-range.create' ) );
+Route::get( '/products/thermal-inventory-report', [ ProductsController::class, 'getThermalInventoryReport' ] )->name( ns()->routeName( 'ns.dashboard.products.thermal-inventory-report' ) );
 Route::get( '/products/scale-range/edit/{scaleRange}', [ ProductsController::class, 'editScaleRange' ] )->name( ns()->routeName( 'ns.dashboard.products.scale-range.edit' ) );

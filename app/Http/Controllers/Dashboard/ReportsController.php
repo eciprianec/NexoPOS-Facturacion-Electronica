@@ -261,4 +261,18 @@ class ReportsController extends DashboardController
     {
         return $this->reportService->computeCombinedReport( $request->input( 'date' ) );
     }
+
+    public function productsThermal80mmReport( Request $request )
+    {
+        $products = \App\Models\Product::with(['unit_quantities.unit', 'category'])
+            ->orderBy( 'name', 'asc' )
+            ->get();
+
+        return View::make( 'pages.dashboard.reports.products-thermal-report', [
+            'title' => __( 'Reporte de Productos (80mm)' ),
+            'description' => __( 'Listado de productos con inventario y precios en formato para punto de venta.' ),
+            'products' => $products,
+            'date' => now()->format('d/m/Y h:i A'),
+        ] );
+    }
 }

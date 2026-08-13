@@ -243,6 +243,11 @@ class MenuService
                         permissions: [ 'nexopos.create.products-labels' ]
                     ),
                     AsideMenu::subMenu(
+                        label: __( 'Reporte Productos (80mm)' ),
+                        identifier: 'products-thermal-report-inv',
+                        href: ns()->url( '/dashboard/reports/products-thermal-80mm' )
+                    ),
+                    AsideMenu::subMenu(
                         label: __( 'Categories' ),
                         identifier: 'categories',
                         permissions: [ 'nexopos.read.categories' ],
@@ -513,6 +518,11 @@ class MenuService
                         identifier: 'payment-types',
                         permissions: [ 'nexopos.reports.payment-types' ],
                         href: ns()->url( '/dashboard/reports/payment-types' )
+                    ),
+                    AsideMenu::subMenu(
+                        label: __( 'Reporte de Productos (80mm)' ),
+                        identifier: 'products-thermal-report',
+                        href: ns()->url( '/dashboard/reports/products-thermal-80mm' )
                     ),
                 ),
             ),

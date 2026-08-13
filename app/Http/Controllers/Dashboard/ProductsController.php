@@ -834,4 +834,16 @@ class ProductsController extends DashboardController
             'message' => __( 'The draft adjustment has been deleted.' ),
         ];
     }
+
+    public function getThermalInventoryReport( Request $request )
+    {
+        $products = Product::with(['unit_quantities.unit', 'category'])
+            ->orderBy( 'name', 'asc' )
+            ->get();
+
+        return View::make( 'pages.dashboard.products.templates.thermal-inventory-report', [
+            'products' => $products,
+            'date' => now()->format('d/m/Y h:i A'),
+        ] );
+    }
 }
