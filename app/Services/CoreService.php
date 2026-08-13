@@ -374,6 +374,8 @@ class CoreService
                         ]
                     )->dispatchForGroup( Role::namespace( Role::ADMIN ) );
                 }
+            } else {
+                Notification::where( 'identifier', 'symlink-' . $tolowercase )->delete();
             }
 
             /**
@@ -401,6 +403,8 @@ class CoreService
                         ]
                     )->dispatchForGroup( Role::namespace( Role::ADMIN ) );
                 }
+            } else {
+                Notification::where( 'identifier', 'symlink-' . $tolowercase )->delete();
             }
         }
     }

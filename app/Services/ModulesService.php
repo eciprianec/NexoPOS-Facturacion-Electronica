@@ -14,6 +14,7 @@ use App\Exceptions\MissingDependencyException;
 use App\Exceptions\ModuleVersionMismatchException;
 use App\Exceptions\NotAllowedException;
 use App\Models\ModuleMigration;
+use App\Models\Notification;
 use Error as GlobalError;
 use Exception;
 use Illuminate\Contracts\View\View as ViewView;
@@ -1136,6 +1137,8 @@ class ModulesService
                 }
             }
         }
+
+        Notification::where( 'identifier', 'symlink-' . strtolower( $moduleNamespace ) )->delete();
     }
 
     /**

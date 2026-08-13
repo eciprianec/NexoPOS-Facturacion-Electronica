@@ -29,5 +29,6 @@ jobs:
             php artisan config:cache
             php artisan route:cache
             php artisan storage:link --quiet || true
+            php artisan modules:symlink --quiet || true
             chown -R www:www /www/wwwroot/45.93.136.97
             echo "Deployment completed successfully!"
