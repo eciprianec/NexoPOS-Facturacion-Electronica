@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 class CashRegistersService
 {
-    public function openRegister( Register $register, $amount, $description )
+    public function openRegister( Register $register, $amount, $description, $denominations = [] )
     {
         if ( $register->status !== Register::STATUS_CLOSED ) {
             throw new NotAllowedException(
@@ -26,6 +26,11 @@ class CashRegistersService
             );
         }
 
+        $descriptionPayload = [
+            'note' => is_string( $description ) ? $description : '',
+            'denominations' => is_array( $denominations ) ? $denominations : ( json_decode( $denominations, true ) ?: [] ),
+        ];
+
         $register->status = Register::STATUS_OPENED;
         $register->used_by = Auth::id();
         $register->save();
@@ -34,7 +39,7 @@ class CashRegistersService
         $registerHistory->register_id = $register->id;
         $registerHistory->action = RegisterHistory::ACTION_OPENING;
         $registerHistory->author_id = Auth::id();
-        $registerHistory->description = $description;
+        $registerHistory->description = json_encode( $descriptionPayload );
         $registerHistory->balance_before = $register->balance;
         $registerHistory->value = $amount;
         $registerHistory->balance_after = ns()->currency->define( $register->balance )->additionateBy( $amount )->toFloat();

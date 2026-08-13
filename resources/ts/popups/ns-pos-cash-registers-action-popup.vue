@@ -5,7 +5,7 @@
                 <h3 class="font-semibold">{{ title }}</h3>
                 <div class="flex items-center gap-2">
                     <button 
-                        v-if="action === 'close' || action === 'closing' || identifier === 'ns.cash-registers-closing'"
+                        v-if="isCloseAction"
                         type="button" 
                         class="px-3 py-1 bg-info-primary text-white font-bold rounded hover:bg-info-secondary text-sm flex items-center gap-1 cursor-pointer"
                         @click="printPreClose()"
@@ -16,8 +16,8 @@
                 </div>
             </div>
             <div class="p-3">
-                <!-- Botón Imprimir Pre-Cierre -->
-                <div v-if="action === 'close' || action === 'closing' || identifier === 'ns.cash-registers-closing'">
+                <!-- Botón Imprimir Pre-Cierre (Solo Cierre) -->
+                <div v-if="isCloseAction">
                     <button 
                         type="button" 
                         class="w-full py-2.5 mb-3 bg-info-primary text-white font-bold text-base rounded shadow hover:bg-info-secondary cursor-pointer flex items-center justify-center gap-2"
@@ -25,41 +25,41 @@
                     >
                         🖨️ IMPRIMIR PRE-CIERRE (80mm) - VER DESGLOSE
                     </button>
+                </div>
 
-                    <!-- Modos de Conteo -->
-                    <div class="flex border-b mb-3">
-                        <button 
-                            type="button" 
-                            class="px-4 py-2 font-bold text-sm border-b-2 cursor-pointer transition-colors"
-                            :class="showBreakdown ? 'border-primary-tertiary text-primary-tertiary' : 'border-transparent text-gray-500'"
-                            @click="showBreakdown = true"
-                        >
-                            💵 Desglose por Billetes/Monedas
-                        </button>
-                        <button 
-                            type="button" 
-                            class="px-4 py-2 font-bold text-sm border-b-2 cursor-pointer transition-colors"
-                            :class="!showBreakdown ? 'border-primary-tertiary text-primary-tertiary' : 'border-transparent text-gray-500'"
-                            @click="showBreakdown = false"
-                        >
-                            🔢 Teclado / Directo
-                        </button>
-                    </div>
+                <!-- Modos de Conteo (Apertura o Cierre) -->
+                <div v-if="hasBreakdownSupport" class="flex border-b mb-3">
+                    <button 
+                        type="button" 
+                        class="px-4 py-2 font-bold text-sm border-b-2 cursor-pointer transition-colors"
+                        :class="showBreakdown ? 'border-primary-tertiary text-primary-tertiary' : 'border-transparent text-gray-500'"
+                        @click="showBreakdown = true"
+                    >
+                        💵 Desglose por Billetes/Monedas
+                    </button>
+                    <button 
+                        type="button" 
+                        class="px-4 py-2 font-bold text-sm border-b-2 cursor-pointer transition-colors"
+                        :class="!showBreakdown ? 'border-primary-tertiary text-primary-tertiary' : 'border-transparent text-gray-500'"
+                        @click="showBreakdown = false"
+                    >
+                        🔢 Teclado / Directo
+                    </button>
                 </div>
 
                 <!-- Resumen de Esperado vs Contado -->
                 <div>
-                    <div v-if="register !== null" class="mb-2 p-3 elevation-surface font-bold border text-right flex justify-between">
+                    <div v-if="isCloseAction && register !== null" class="mb-2 p-3 elevation-surface font-bold border text-right flex justify-between">
                         <span>{{ __( 'Efectivo Esperado en Caja' ) }} </span>
                         <span>{{ nsCurrency( register.balance ) }}</span>
                     </div>
                     <div class="mb-2 p-3 bg-success-primary border-success-tertiary border font-bold text-right flex justify-between">
-                        <span>{{ __( 'Efectivo Contado (Total)' ) }}</span>
+                        <span>{{ isOpenAction ? __( 'Fondo Inicial de Apertura' ) : __( 'Efectivo Contado (Total)' ) }}</span>
                         <span class="text-xl">{{ nsCurrency( amount ) }}</span>
                     </div>
 
                     <!-- Alerta de Faltante / Cuadre para Cierre -->
-                    <div v-if="(action === 'close' || action === 'closing' || identifier === 'ns.cash-registers-closing') && register !== null" class="mb-3">
+                    <div v-if="isCloseAction && register !== null" class="mb-3">
                         <div v-if="cashShortage > 0.01" class="p-3 bg-red-600 text-white font-bold rounded text-center text-sm shadow">
                             🚨 FALTANTE DETECTADO: -{{ nsCurrency( cashShortage ) }}<br>
                             <span class="text-xs font-normal">No se permite cerrar la caja con faltante de efectivo. Verifique el dinero ingresado.</span>
@@ -74,7 +74,7 @@
                 </div>
 
                 <!-- Vista de Desglose de Billetes y Monedas -->
-                <div v-if="(action === 'close' || action === 'closing' || identifier === 'ns.cash-registers-closing') && showBreakdown" class="mb-3 border p-3 rounded bg-gray-50 dark:bg-gray-800">
+                <div v-if="hasBreakdownSupport && showBreakdown" class="mb-3 border p-3 rounded bg-gray-50 dark:bg-gray-800">
                     <h4 class="font-bold text-sm mb-2 text-gray-700 dark:text-gray-200">Conteo de Billetes y Monedas:</h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-56 overflow-y-auto p-1">
                         <div v-for="(d, idx) in denominations" :key="idx" class="flex items-center justify-between bg-white dark:bg-gray-700 p-2 rounded border">
@@ -95,7 +95,7 @@
                 </div>
 
                 <!-- Teclado Numérico Directo -->
-                <div v-show="! ( (action === 'close' || action === 'closing' || identifier === 'ns.cash-registers-closing') && showBreakdown )" class="flex flex-col md:flex-row md:-mx-2">
+                <div v-show="! ( hasBreakdownSupport && showBreakdown )" class="flex flex-col md:flex-row md:-mx-2">
                     <div class="md:px-2 md:w-1/2 w-full">
                         <ns-numpad :floating="true" @next="submit( $event )" :value="amount" @changed="definedValue( $event )"></ns-numpad>
                     </div>
@@ -105,16 +105,21 @@
                 </div>
 
                 <!-- Campo de Observación para Desglose -->
-                <div v-if="(action === 'close' || action === 'closing' || identifier === 'ns.cash-registers-closing') && showBreakdown" class="mt-2">
+                <div v-if="hasBreakdownSupport && showBreakdown" class="mt-2">
                     <ns-field v-for="(field,index) of fields" :field="field" :key="index"></ns-field>
                     <button 
                         type="button" 
                         class="w-full py-3 mt-3 text-white font-bold text-base rounded shadow cursor-pointer transition-colors"
-                        :class="cashShortage > 0.01 ? 'bg-gray-400 cursor-not-allowed' : 'bg-success-primary hover:bg-success-secondary'"
-                        :disabled="cashShortage > 0.01"
+                        :class="(isCloseAction && cashShortage > 0.01) ? 'bg-gray-400 cursor-not-allowed' : 'bg-success-primary hover:bg-success-secondary'"
+                        :disabled="isCloseAction && cashShortage > 0.01"
                         @click="submit( amount )"
                     >
-                        {{ cashShortage > 0.01 ? '⛔ CIERRE BLOQUEADO POR FALTANTE' : '✅ CONFIRMAR Y CERRAR CAJA' }}
+                        <template v-if="isOpenAction">
+                            ✅ CONFIRMAR Y ABRIR CAJA
+                        </template>
+                        <template v-else>
+                            {{ cashShortage > 0.01 ? '⛔ CIERRE BLOQUEADO POR FALTANTE' : '✅ CONFIRMAR Y CERRAR CAJA' }}
+                        </template>
                     </button>
                 </div>
             </div>
@@ -166,6 +171,15 @@ export default {
         }
     },
     computed: {
+        isCloseAction() {
+            return this.action === 'close' || this.action === 'closing' || this.identifier === 'ns.cash-registers-closing';
+        },
+        isOpenAction() {
+            return this.action === 'open' || this.action === 'opening' || this.action === 'register-opening' || this.identifier === 'ns.cash-registers-opening';
+        },
+        hasBreakdownSupport() {
+            return this.isCloseAction || this.isOpenAction;
+        },
         cashShortage() {
             if ( ! this.register || this.register.balance === undefined ) return 0;
             const expected = parseFloat( this.register.balance || 0 );

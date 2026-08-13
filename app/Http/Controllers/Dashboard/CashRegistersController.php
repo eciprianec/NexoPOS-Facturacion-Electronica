@@ -78,13 +78,15 @@ class CashRegistersController extends DashboardController
             return $this->registersService->openRegister(
                 $register,
                 $request->input( 'amount' ),
-                $request->input( 'description' )
+                $request->input( 'description' ),
+                $request->input( 'denominations', [] )
             );
         } elseif ( $action === RegisterHistory::ACTION_OPENING ) {
             return $this->registersService->openRegister(
                 $register,
                 $request->input( 'amount' ),
-                $request->input( 'description' )
+                $request->input( 'description' ),
+                $request->input( 'denominations', [] )
             );
         } elseif ( $action === 'close' ) {
             return $this->registersService->closeRegister(
